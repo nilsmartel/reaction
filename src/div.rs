@@ -1,10 +1,9 @@
 use std::rc::Rc;
 
 use crate::{
-    component::Component,
-    context::Context,
+    component::{Component, Hooks, Shape, RenderHooks, ShapeRenderer, StateRenderer},
+    context::{Context, Path},
     key::Key,
-    renderable::{Renderable, Shape},
 };
 
 struct Div {
@@ -25,40 +24,38 @@ impl Component for Div {
         self.key = Some(key);
     }
 
-    fn build(&self, ctx: &Context) -> &dyn Renderable {
-        let renderables: Vec<_> = self
+    fn build(self: Box<Div>, ctx: Context) -> Box<dyn StateRenderer> {
+        let items: Vec<Path> = self
             .items
-            .iter()
-            .map(|component| ctx.associate(component.as_ref()))
+            .into_iter()
+            .map(|component| ctx.keep(component))
             .collect();
 
-        let renderables = Rc::new(renderables);
-        let r = renderables.clone();
+        Box::new(DivStateRenderer { items })
+    }
+}
 
-        &Renderer::new(move || {
-            // TODO this should be more complicated in practice
-            // This is just stacking all elements on top of each other
-            (&r).iter().map(|r| r.render()).flatten().collect()
+struct DivStateRenderer {
+    items: Vec<Path>,
+}
+
+impl StateRenderer for DivStateRenderer {
+    fn compute(&self, _hooks: Hooks) -> Box<dyn ShapeRenderer> {
+        Box::new(DivShapeRenderer {
+            items: self.items.clone(),
         })
     }
 }
 
-struct Renderer<T: Fn() -> Vec<Shape>> {
-    render_fn: T,
+struct DivShapeRenderer {
+    items: Vec<Path>,
 }
 
-impl<T: Fn() -> Vec<Shape>> Renderer<T> {
-    fn new(render_fn: T) -> Self {
-        Self { render_fn }
-    }
-}
+impl ShapeRenderer for DivShapeRenderer {
+    fn render(&self, hooks: RenderHooks) -> Vec<Shape> {
+        // TODO hooks.use_parent_size();
 
-impl<T> Renderable for Renderer<T>
-where
-    T: Fn() -> Vec<Shape>,
-{
-    fn render(&self) -> Vec<Shape> {
-        let r = &self.render_fn;
-        r()
+        // self.items.iter().map(hooks.use_shape);
+        vec![]
     }
 }

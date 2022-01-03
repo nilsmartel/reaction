@@ -9,13 +9,13 @@ pub trait Component {
     fn build(self: Box<Self>, ctx: Context) -> Box<dyn StateRenderer>;
 }
 
-type Hooks = ();
+pub type Hooks = ();
 
 pub trait StateRenderer {
     fn compute(&self, hooks: Hooks) -> Box<dyn ShapeRenderer>;
 }
 
-struct RenderHooks {}
+pub struct RenderHooks {}
 impl RenderHooks {
     // Id is the id of some shape renderer
     fn use_shape(&self, id: Path) -> Vec<Shape> {

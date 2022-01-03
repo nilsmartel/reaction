@@ -34,12 +34,15 @@ impl Context {
             .unwrap_or_else(|| self.next_key().into());
 
         // generate unique path for this element.
-        let mut path = Vec::with_capacity(self.path.len() + 1);
-        path.push(key);
+        let path = {
+            let mut p = Vec::with_capacity(self.path.len() + 1);
+            p.push(key);
+            p
+        };
 
         // generate new state to associate with component
         let ctx = Context {
-            path,
+            path: path.clone(),
             child_id_counter: Mutex::new(0),
             runtime: self.runtime,
         };
@@ -51,7 +54,7 @@ impl Context {
             .runtime
             .lock()
             .expect("to update state_renderer in runtime");
-        rt.state_renderers[&path] = state_renderer;
+        rt.state_renderers.insert(path.clone(), state_renderer);
 
         path
     }
