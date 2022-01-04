@@ -1,5 +1,7 @@
 use crate::context::*;
-use crate::key::Key;
+use crate::key::*;
+use crate::shape::*;
+use crate::hooks::*;
 
 pub trait Component {
     fn get_key(&self) -> Option<&Key>;
@@ -9,28 +11,13 @@ pub trait Component {
     fn build(self: Box<Self>, ctx: Context) -> Box<dyn StateRenderer>;
 }
 
-pub type Hooks = ();
-
 pub trait StateRenderer {
     fn compute(&self, hooks: Hooks) -> Box<dyn ShapeRenderer>;
-}
-
-pub struct RenderHooks {}
-impl RenderHooks {
-    // Id is the id of some shape renderer
-    fn use_shape(&self, id: Path) -> Vec<Shape> {
-        unimplemented!()
-    }
 }
 
 pub trait ShapeRenderer {
     // TODO return ((width, height), Vec<Shape>)
     fn render(&self, hooks: RenderHooks) -> Vec<Shape>;
-}
-
-#[derive(Copy, Clone)]
-pub enum Shape {
-    Box(f32, f32, f32, f32),
 }
 
 fn component<C: 'static + Component>(f: impl Fn(Hooks) -> C + 'static) -> BlanketComponent {

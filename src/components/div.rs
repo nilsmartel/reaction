@@ -1,11 +1,12 @@
-use std::rc::Rc;
-
 use crate::{
-    component::{Component, Hooks, Shape, RenderHooks, ShapeRenderer, StateRenderer},
-    context::{Context, Path},
-    key::Key,
+    component::{Component, ShapeRenderer, StateRenderer},
+    context::Context,
+    hooks::{Hooks, RenderHooks},
+    key::{Key, Path},
+    shape::Shape,
 };
 
+/// Concrete sample implementation of a component which has child components
 struct Div {
     key: Option<Key>,
     items: Vec<Box<dyn Component>>,

@@ -1,22 +1,28 @@
-use crate::{component::*, key::Key};
-use std::{any::Any, collections::HashMap, rc::Rc, sync::Mutex};
+use crate::{
+    component::*,
+    key::Path,
+    runtime::*,
+};
+use std::sync::Mutex;
 
-pub type Path = Vec<Key>;
-
-struct Runtime {
-    state_renderers: HashMap<Path, Box<dyn StateRenderer>>,
-}
-
+/// uniquely identifies components in the component tree.
+/// Manages their integration into the runtime, as well as the integration of sub-components.
 pub struct Context {
-    // TODO actually needs no mutable store
-    // but ability to push new state_renderers
-    runtime: &'static Mutex<Runtime>,
-    // TODO needs ot state, this is what Hooks are for
-    child_id_counter: Mutex<isize>,
+    /// References the the current Path uniquely associated with the component, this Context got
+    /// created for
     path: Path,
+
+    /// Keeps track of id of sub-components (children)
+    /// NOTE: would be nice to remove the Mutex around this.
+    child_id_counter: Mutex<isize>,
+
+    /// Reference to the runtime, used in order to integrate further sub-components
+    runtime: &'static Mutex<Runtime>,
+
 }
 
 impl Context {
+    /// generate next available id for a child.
     fn next_key(&self) -> isize {
         let mut counter = self.child_id_counter.lock().expect("to use key counter");
         let key = *counter;
@@ -24,6 +30,8 @@ impl Context {
         key
     }
 
+    /// Integrates a component into the runtime and returns a reference in form of it's distinct
+    /// key to it.
     pub fn keep(&self, component: Box<dyn Component>) -> Path {
         // get key for component attempt to generate unique one.
         // Note that the generated key is not guaranteed to be unique and the application might
@@ -54,35 +62,9 @@ impl Context {
             .runtime
             .lock()
             .expect("to update state_renderer in runtime");
+
         rt.state_renderers.insert(path.clone(), state_renderer);
 
         path
     }
 }
-
-/*
-        // TODO these next few lines are actually logic for hooks
-
-        // Fetch the state of the child
-        let state = {
-            // Make new state known or insert fresh one for this component
-            let mut store = self.store.lock().expect("to lock global state");
-            store
-                .states
-                .entry(path.clone())
-                // make sure the state is no longer fresh, if it's fetched from the state database
-                .and_modify(|s| s.new = false)
-                .or_insert(State::default())
-                .clone()
-        };
-
-// Fetch the state of the child
-        let state = {
-            let mut store = self.store.lock().expect("to lock global state");
-            store
-                .states
-                .entry(path.clone())
-                .or_insert(State::default())
-                .clone()
-        };
-*/

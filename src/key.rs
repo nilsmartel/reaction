@@ -22,3 +22,5 @@ impl From<isize> for Key {
         Key::Int(i)
     }
 }
+
+pub type Path = Vec<Key>;
